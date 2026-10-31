@@ -16,4 +16,11 @@ typedef struct {
 esp_err_t system_metrics_get(system_metrics_t *self);
 void system_metrics_log(void);
 
+esp_err_t system_metrics_start_monitor(uint32_t interval_ms);
+esp_err_t system_metrics_stop_monitor(void);
+esp_err_t system_metrics_set_interval(uint32_t interval_ms);
+esp_err_t system_metrics_get_monitor_status(bool *running, uint32_t *interval_ms);
+esp_err_t system_metrics_set_heap_threshold(size_t threshold_bytes);
+size_t system_metrics_get_heap_threshold(void);
+
 #endif

@@ -6,35 +6,28 @@
 
 #include "led.h"
 #include "diagnostic_shell.h"
+#include "system_metrics.h"
 
 static const char *TAG = "ESP32_RTM";
-
-#include <stdio.h>
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#include "esp_log.h"
-#include "led.h"
-
 
 void app_main(void)
 {
     ESP_LOGI(TAG, "Application started");
 
+    // Initialize LED
     esp_err_t err = led_init();
-
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "LED initialization failed");
+        ESP_LOGE(TAG, "Failed to initialize LED: %s", esp_err_to_name(err));
         return;
     }
-
     ESP_LOGI(TAG, "LED initialized");
 
+    // Start diagnostic shell
     err = diagnostic_shell_start();
     if (err != ESP_OK) {
-        ESP_LOGE("ESP32_RTM", "Diagnostic shell failed: %s",
-                 esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to start Diagnostic Shell: %s", esp_err_to_name(err));
         return;
     }
+    ESP_LOGI(TAG, "Diagnostic Shell started");
+    ESP_LOGI(TAG, "Application ready");
 }

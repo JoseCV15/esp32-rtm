@@ -103,9 +103,137 @@ static int cmd_metrics(int argc, char *argv[])
 }
 
 /*
-* Command registration helper
+* Configuration cmd
+* monitor status
+* monitor threshold <KB>
+* monitor interval <ms>
+* monitor start
+* montior stop
 */
 
+static int cmd_monitor_configuration(int argc, char *argv[])
+{
+    esp_err_t err = ESP_OK;
+    if (argc < 2) {
+        printf("\nMonitor commands:\n");
+        printf("  monitor status\n");
+        printf("  monitor threshold <KB>\n");
+        printf("  monitor interval <ms>\n");
+        printf("  monitor start\n");
+        printf("  monitor stop\n\n");
+        return 0;
+    }
+
+    // Monitor Status
+    if (strcmp(argv[1], "status") == 0) {
+        if (argc != 2) {
+            printf("Usage: monitor status\n");
+            return 1;
+        }
+        bool running = false;
+        uint32_t interval = 0;
+        err = system_metrics_get_monitor_status(&running, &interval);
+        if (err != ESP_OK) {
+            goto monitor_error;
+        }
+
+        printf("\n");
+        printf("======== MONITOR STATUS ========\n");
+        printf("State: %s\n", running ? "RUNNING" : "STOPPED");
+        printf("Interval: %lu ms\n", (unsigned long)interval);
+        printf("Heap threshold: %u KB\n", (unsigned int)(system_metrics_get_heap_threshold() / 1024));
+        printf("================================\n\n");
+        return 0;
+    }
+
+    else if (strcmp(argv[1], "threshold") == 0) {
+        if (argc != 3) {
+            printf("Usage: monitor threshold <KB>\n");
+            return 1;
+        }
+
+        char *endptr = NULL;
+        unsigned long kb = strtoul(argv[2], &endptr, 10);
+
+        if (argv[2][0] == '\0' || *endptr != '\0' || kb == 0 || kb > SIZE_MAX / 1024) {
+            printf("Invalid threshold value\n");
+            return 1;
+        }
+
+        size_t threshold_bytes = (size_t)kb * 1024;
+        err = system_metrics_set_heap_threshold(threshold_bytes);
+        if (err != ESP_OK) {
+            goto monitor_error;
+        }
+        printf("Heap threshold set to %lu KB\n", kb);
+        return 0;
+    }
+    // interval
+    else if (strcmp(argv[1], "interval") == 0) {
+        if (argc != 3) {
+            printf("Usage: monitor interval <ms>\n");
+            return 1;
+        }
+
+        char *endptr = NULL;
+        unsigned long ms = strtoul(argv[2], &endptr, 10);
+
+        if (argv[2][0] == '\0' || *endptr != '\0' || ms < 100 || ms > 60000) {
+            printf("Invalid interval. Must be between 1oo and 60000 ms\n");
+            return 1;
+        }
+
+        err = system_metrics_set_heap_threshold((uint32_t)ms);
+        if (err != ESP_OK) {
+            goto monitor_error;
+        }
+        printf("Heap interval set to %lu ms\n", ms);
+        return 0;
+    }
+
+    // Monitor start
+    else if (strcmp(argv[1], "start") == 0) {
+        if (argc != 2) {
+            printf("Usage: monitor start\n");
+            return 1;
+        }
+
+        err = system_metrics_start_monitor(0);
+        if (err != ESP_OK) {
+            goto monitor_error;
+        }
+        printf("Monitor started\n");
+        return 0;
+    }
+    // Monitor stop
+    else if (strcmp(argv[1], "stop") == 0) {
+        if (argc != 2) {
+            printf("Usage: monitor stop\n");
+            return 1;
+        }
+
+        err = system_metrics_stop_monitor();
+        if (err != ESP_OK) {
+            goto monitor_error;
+        }
+        printf("Monitor stopped\n");
+        return 0;
+    }
+    else {
+        printf("Unknown Monitor action: %s\n", argv[1]);
+        printf("Type 'monitor' to see available commands\n");
+        return 1;
+    }
+
+monitor_error:
+    printf("Monitor command failed: %s\n", esp_err_to_name(err));
+    return 1;
+    
+}
+
+/*
+* Command registration helper
+*/
 static esp_err_t register_cmd(const char *command, const char *help, const char *hint, esp_console_cmd_func_t func)
 {
     const esp_console_cmd_t cmd = {
@@ -131,7 +259,7 @@ esp_err_t command_dispatcher_register_commands(void)
         return err;
     }
 
-    err = register_cmd("status", "Display current system status", NULL, cmd_status);
+    err = register_cmd("status", "Display system status", NULL, cmd_status);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register status command: %s", esp_err_to_name(err));
         return err;
@@ -140,6 +268,12 @@ esp_err_t command_dispatcher_register_commands(void)
     err = register_cmd("metrics", "Display system metrics", NULL, cmd_metrics);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register metrics command: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    err = register_cmd("monitor", "Configure system monitoring", NULL, cmd_monitor_configuration);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to register monitor command: %s", esp_err_to_name(err));
         return err;
     }
 
