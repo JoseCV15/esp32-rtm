@@ -8,5 +8,6 @@
 esp_err_t led_init(void);
 esp_err_t led_set(bool state);
 esp_err_t led_toggle(void);
+esp_err_t led_get_state(bool *state);
 
 #endif

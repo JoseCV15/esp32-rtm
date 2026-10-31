@@ -10,10 +10,10 @@ typedef struct {
     size_t free_heap_bytes;
     size_t minimum_free_heap_bytes;
     size_t free_internal_heap_bytes;
+    bool led_state;
 }system_metrics_t;
 
 esp_err_t system_metrics_get(system_metrics_t *self);
 void system_metrics_log(void);
-
 
 #endif

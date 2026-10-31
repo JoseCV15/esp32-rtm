@@ -1,5 +1,10 @@
 idf_component_register(
-    SRCS "main.c"
-    INCLUDE_DIRS "."
-    REQUIRES led system_metrics
+    SRCS 
+        "main.c"
+    INCLUDE_DIRS 
+        "."
+    REQUIRES 
+        led 
+        system_metrics 
+        diagnostic_shell
 )

@@ -44,3 +44,16 @@ esp_err_t led_toggle(void)
     }
     return led_set(!led_state);
 }
+
+esp_err_t led_get_state(bool *state)
+{
+    if (!state) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!led_initialize) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    *state = led_state;
+    return ESP_OK;
+}

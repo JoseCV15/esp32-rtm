@@ -4,6 +4,8 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_heap_caps.h"
+#include "led.h"
+
 
 static const char *TAG = "system_metrics";
 
@@ -18,6 +20,11 @@ esp_err_t system_metrics_get(system_metrics_t *self)
     self->minimum_free_heap_bytes = esp_get_minimum_free_heap_size();
     self->free_internal_heap_bytes = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
 
+    esp_err_t err = led_get_state(&self->led_state);
+    if (err != ESP_OK) {
+        return err;
+    }
+  
     return ESP_OK;
 }
 
@@ -36,4 +43,6 @@ void system_metrics_log(void)
     ESP_LOGI(TAG, "Free heap:           %u bytes", (unsigned int)metrics.free_heap_bytes);
     ESP_LOGI(TAG, "Minimum free heap:   %u bytes", (unsigned int)metrics.minimum_free_heap_bytes);
     ESP_LOGI(TAG, "Free internal heap:  %u bytes", (unsigned int)metrics.free_internal_heap_bytes);
+    ESP_LOGI(TAG, "LED state: %s", metrics.led_state ? "ON" : "OFF");
+
 }
