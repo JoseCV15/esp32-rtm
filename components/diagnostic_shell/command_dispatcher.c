@@ -1,13 +1,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "esp_console.h"
 #include "esp_err.h"
 #include "esp_log.h"
 
 #include "command_dispatcher.h"
-#include "led.h"
+#include "led_controller.h"
 #include "system_metrics.h"
 
 static const char *TAG = "command_dispacher";
@@ -21,23 +23,76 @@ static const char *TAG = "command_dispacher";
 
 static int cmd_led(int argc, char *argv[])
 {
-    if (argc != 2) {
-        printf("Usage: led <on|off|toggle>\n");
-        return 1;
+    esp_err_t err = ESP_OK;
+
+    if (argc < 2) {
+        printf("LED commands:\n");
+        printf("  led on\n");
+        printf("  led off\n");
+        printf("  led toggle <seconds>\n");
+        printf("  led status\n");
+        return 0;
     }
 
-    esp_err_t err;
     if (strcmp(argv[1], "on") == 0) {
-        err = led_set(true);
+        if (argc != 2) {
+            printf("Usage led on\n");
+            return 1;
+        }
+        err = led_controller_set_on();
     }
     else if (strcmp(argv[1], "off") == 0) {
-        err = led_set(false);
+        if (argc != 2) {
+            printf("Usage led off\n");
+            return 1;
+        }
+        err = led_controller_set_off();
     }
     else if (strcmp(argv[1], "toggle") == 0) {
-        err = led_toggle();
+        if (argc != 3) {
+            printf("Usage led toggle <seconds>\n");
+            return 1;
+        }
+
+        char *endptr = NULL;
+        unsigned long seconds = strtoul(argv[2], &endptr, 10);
+
+        if (argv[2][0] == '\0' || *endptr != '\0' || seconds == 0 || seconds > 3600) {
+            printf("Invalid duration. Must be between 1 and 3600 seconds\n");
+            return 1;
+        }
+
+        err = led_controller_toggle_for((uint32_t)seconds);
+
+        if (err == ESP_OK) {
+            printf("LED ON for %lu seconds\n", seconds);
+        }
+    }
+    else if (strcmp(argv[1], "status") == 0) {
+        if (argc != 2) {
+            printf("Usage: led status\n");
+            return 1;
+        }
+
+        bool is_on = false;
+        uint32_t remaining_seconds = 0;
+
+        err = led_controller_get_status(&is_on, &remaining_seconds);
+        if (err == ESP_OK) {
+            printf("\n===== LED STATUS =====\n");
+            printf("State: %s\n", is_on ? "ON" : "OFF");
+
+            if (remaining_seconds > 0) {
+                printf("Remaining time: %lu seconds\n",(unsigned long)remaining_seconds);
+            } else {
+                printf("Timer: inactive\n");
+            }
+
+            printf("======================\n\n");
+        }
     }
     else {
-        printf("Unknown Led action: %s\n", argv[1]);
+        printf("Unknown Led command: %s\n", argv[1]);
         return 1;
     }
 
@@ -45,13 +100,8 @@ static int cmd_led(int argc, char *argv[])
         printf("Led command failed: %s\n", esp_err_to_name(err));
         return 1;
     }
-    // get led status
-    bool state = false;
-    err = led_get_state(&state);
-    if (err == ESP_OK) {
-        printf("Led state: %s\n", state ? "ON": "OFF");
-    }
-    return err == ESP_OK ? 0 : 1;
+    
+    return 0;
 }
 
 /*

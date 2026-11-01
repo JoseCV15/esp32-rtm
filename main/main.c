@@ -5,6 +5,7 @@
 #include "freertos/task.h"
 
 #include "led.h"
+#include "led_controller.h"
 #include "diagnostic_shell.h"
 #include "system_metrics.h"
 
@@ -21,6 +22,14 @@ void app_main(void)
         return;
     }
     ESP_LOGI(TAG, "LED initialized");
+
+    // Initialize LED controller
+    err = led_controller_init();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to initialize LED controller: %s", esp_err_to_name(err));
+        return;
+    }
+    ESP_LOGI(TAG, "LED controller initialized");
 
     // Start diagnostic shell
     err = diagnostic_shell_start();

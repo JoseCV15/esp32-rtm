@@ -5,6 +5,7 @@ idf_component_register(
         "."
     REQUIRES 
         led 
+        led_controller
         system_metrics 
         diagnostic_shell
 )
