@@ -1,9 +1,11 @@
 idf_component_register(
     SRCS 
-        "main.c"
+        "main.cpp"
     INCLUDE_DIRS 
         "."
-    REQUIRES 
+    REQUIRES
+        rtm_core
+        freertos
         led 
         led_controller
         system_metrics 

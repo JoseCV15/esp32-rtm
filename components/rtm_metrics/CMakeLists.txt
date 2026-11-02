@@ -1,0 +1,12 @@
+idf_component_register(
+    SRCS 
+        "rtm_metrics.c"  
+    INCLUDE_DIRS 
+        "include"
+    REQUIRES
+        log
+        heap
+        esp_timer
+        esp_system
+        led
+)
