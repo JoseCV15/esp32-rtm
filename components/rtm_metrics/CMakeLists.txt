@@ -8,5 +8,7 @@ idf_component_register(
         heap
         esp_timer
         esp_system
-        led
+        esp_hw_support
+        freertos
+        log
 )

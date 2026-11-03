@@ -10,7 +10,7 @@
 
 #include "command_dispatcher.h"
 #include "led_controller.h"
-#include "system_metrics.h"
+#include "rtm_metrics.h"
 
 static const char *TAG = "command_dispacher";
 
@@ -116,9 +116,9 @@ static int cmd_status(int argc, char *argv[])
         return 1;
     }
 
-    system_metrics_t metrics = {0};
+    rtm_metrics_t metrics = {0};
 
-    esp_err_t err = system_metrics_get(&metrics);
+    esp_err_t err = rtm_metrics_get(&metrics);
     if (err != ESP_OK) {
         printf("Failed to get system metrics: %s\n", esp_err_to_name(err));
         return 1;
@@ -126,11 +126,10 @@ static int cmd_status(int argc, char *argv[])
 
     printf("\n");
     printf("======== SYSTEM STATUS ==========\n");
-    printf("Uptime:              %llu ms\n", (unsigned long long)metrics.uptime_ms);
-    printf("Free heap:           %zu bytes\n", metrics.free_heap_bytes);
-    printf("Minimum free heap:   %zu bytes\n", metrics.minimum_free_heap_bytes);
-    printf("Free internal heap:  %zu bytes\n", metrics.free_internal_heap_bytes);
-    printf("LED state:           %s\n", metrics.led_state ? "ON" : "OFF");
+    printf("Uptime:              %llu ms\n", (unsigned long long)metrics.uptime);
+    printf("Free heap:           %zu bytes\n", metrics.free_heap);
+    printf("Minimum free heap:   %zu bytes\n", metrics.minimum_free_heap);
+    //printf("Free internal heap:  %zu bytes\n", metrics.free_internal_heap);
     printf("===================================\n\n");
     return 0;
 }
@@ -147,8 +146,7 @@ static int cmd_metrics(int argc, char *argv[])
         printf("Usage: metrics\n");
         return 1;
     }
-
-    system_metrics_log();
+    rtm_metrics_print();
     return 0;
 }
 
@@ -161,6 +159,7 @@ static int cmd_metrics(int argc, char *argv[])
 * montior stop
 */
 
+/*
 static int cmd_monitor_configuration(int argc, char *argv[])
 {
     esp_err_t err = ESP_OK;
@@ -281,6 +280,8 @@ monitor_error:
     
 }
 
+*/
+
 /*
 * Command registration helper
 */
@@ -320,12 +321,14 @@ esp_err_t command_dispatcher_register_commands(void)
         ESP_LOGE(TAG, "Failed to register metrics command: %s", esp_err_to_name(err));
         return err;
     }
-
+    
+    /*
     err = register_cmd("monitor", "Configure system monitoring", NULL, cmd_monitor_configuration);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to register monitor command: %s", esp_err_to_name(err));
         return err;
     }
+    */
 
     ESP_LOGI(TAG, "All diagnostic commands registered");
     return ESP_OK;

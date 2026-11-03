@@ -5,9 +5,8 @@ idf_component_register(
         "."
     REQUIRES
         rtm_core
+        rtm_metrics
         freertos
         led 
         led_controller
-        system_metrics 
-        diagnostic_shell
 )

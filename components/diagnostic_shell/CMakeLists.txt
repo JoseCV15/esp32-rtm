@@ -10,5 +10,5 @@ idf_component_register(
         console
         log
         led_controller
-        system_metrics
+        rtm_metrics
 )
